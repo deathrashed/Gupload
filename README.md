@@ -1,8 +1,36 @@
 <div align="center">
   <img src="data/assets/icon.png" alt="Gupload Icon">
-  <h1></h1>
+  <h1>Gupload</h1>
   <p>A powerful GitHub-based file hosting system that uploads files to GitHub repositories and returns markdown/HTML links. Perfect for hosting media files, scripts, documents, and more with automatic organization and smart naming.</p>
 </div>
+
+## 🚀 Quick Start (5 minutes)
+
+```bash
+# 1. Clone repository
+git clone https://github.com/YOUR_USERNAME/Gupload.git
+cd Gupload
+
+# 2. Make scripts executable
+chmod +x ghu scripts/*.sh
+
+# 3. Authenticate with GitHub
+gh auth login
+
+# 4. Configure (edit with your GitHub username and repo)
+mkdir -p ~/.config/ghuploader
+cp data/config.example.json ~/.config/ghuploader/config.json
+# Edit config.json with your settings
+
+# 5. Upload a file
+./ghu ~/example.png
+```
+
+✔ File uploaded to GitHub  
+✔ Markdown/URL copied to clipboard  
+✔ No server, no config sprawl
+
+---
 
 ## Features
 
@@ -30,7 +58,8 @@
 - [Troubleshooting](#troubleshooting)
 - [Contributing](#contributing)
 
-## Installation
+<details>
+<summary><strong>📦 Installation</strong> (Click to expand)</summary>
 
 ### Prerequisites
 
@@ -71,7 +100,10 @@
    # Edit config.json with your settings (see Configuration section)
    ```
 
-## Configuration
+</details>
+
+<details>
+<summary><strong>⚙️ Configuration</strong> (Click to expand)</summary>
 
 Edit `~/.config/ghuploader/config.json` with your settings:
 
@@ -106,7 +138,10 @@ See `data/config.example.json` for all available configuration options.
 - **`output_mode`** - Output format: `"markdown"`, `"url"`, or `"both"`
 - **`contents_max_mb`** - Maximum file size for Contents API (default: 95MB). Larger files use Releases API.
 
-## Authentication
+</details>
+
+<details>
+<summary><strong>🔐 Authentication</strong> (Click to expand)</summary>
 
 Gupload supports multiple secure authentication methods (in order of priority):
 
@@ -137,6 +172,8 @@ security add-generic-password -s "GuploadGitHubToken" -w "YOUR_TOKEN" -a "$USER"
 3. Select scopes: `repo` (full control of private repositories)
 4. Copy the token immediately (you won't see it again)
 5. Use one of the authentication methods above
+
+</details>
 
 ## Usage
 
@@ -185,7 +222,8 @@ The interactive menu provides:
 # Uploads all cover.jpg, logo.png, and artist.jpg files for the artist
 ```
 
-## File Organization
+<details>
+<summary><strong>📁 File Organization</strong> (Click to expand)</summary>
 
 ### Automatic Categorization
 
@@ -247,7 +285,10 @@ Uploads/
         └── coldsteel-artist.jpg
 ```
 
-## Features in Detail
+</details>
+
+<details>
+<summary><strong>✨ Features in Detail</strong> (Click to expand)</summary>
 
 ### Smart Naming
 
@@ -288,6 +329,8 @@ https://raw.githubusercontent.com/...
 Includes both markdown and URL.
 
 Output is automatically copied to clipboard (macOS).
+
+</details>
 
 ## Scripts
 
@@ -382,7 +425,8 @@ This repository has been audited for security issues:
 
 </details>
 
-## Troubleshooting
+<details>
+<summary><strong>🛠️ Troubleshooting</strong> (Click to expand)</summary>
 
 ### "Bad credentials" error
 - Verify your token is valid and has correct permissions
@@ -407,7 +451,10 @@ This repository has been audited for security issues:
 - Ensure package indicators exist (`__init__.py`, `go.mod`, `Gemfile`, etc.)
 - Upload all related files together for best results
 
-## Contributing
+</details>
+
+<details>
+<summary><strong>🤝 Contributing</strong> (Click to expand)</summary>
 
 Contributions are welcome! Please feel free to submit a Pull Request.
 
@@ -417,11 +464,14 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 4. Push to the branch (`git push origin feature/AmazingFeature`)
 5. Open a Pull Request
 
+</details>
+
 ## License
 
 This project is licensed under the MIT License - see the LICENSE file for details.
 
-## Repository Structure
+<details>
+<summary><strong>📂 Repository Structure</strong> (Click to expand)</summary>
 
 ```
 Gupload/
@@ -447,6 +497,8 @@ Gupload/
 - See `data/docs/USAGE.md` for detailed usage guide
 - See `data/docs/STRUCTURE.md` for repository structure documentation
 - See `CLAUDE.md` for development documentation
+
+</details>
 
 ---
 
