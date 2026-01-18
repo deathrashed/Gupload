@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="data/assets/icon.png" alt="Gupload Icon" width="120" height="120">
+  <img src="data/assets/icon.png" alt="Gupload Icon">
   <h1>Gupload</h1>
   <p>A powerful GitHub-based file hosting system that uploads files to GitHub repositories and returns markdown/HTML links. Perfect for hosting media files, scripts, documents, and more with automatic organization and smart naming.</p>
 </div>
