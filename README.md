@@ -40,9 +40,17 @@ A powerful GitHub-based file hosting system that uploads files to GitHub reposit
 
 1. **Clone or download this repository:**
    ```bash
+   # Standard clone (includes Uploads/ folder with all uploads)
    git clone https://github.com/YOUR_USERNAME/Gupload.git
    cd Gupload
+   
+   # Or clone without Uploads/ folder (recommended, keeps repo smaller)
+   git clone --filter=blob:none --sparse https://github.com/YOUR_USERNAME/Gupload.git
+   cd Gupload
+   git sparse-checkout set --no-cone '/*' '!Uploads'
    ```
+   
+   **Note:** The `Uploads/` folder contains all uploaded files. If you clone without it, uploaded files will still be accessible via GitHub URLs (raw.githubusercontent.com), but won't be in your local repository.
 
 2. **Make scripts executable:**
    ```bash

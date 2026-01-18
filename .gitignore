@@ -32,5 +32,10 @@ config.json
 data/logs/*.log
 
 # Uploads folder (contains personal uploads, users can clone without it)
+# Files uploaded via API will still exist on GitHub but can be excluded from clone
 Uploads/
 uploads/
+
+# Prevent ~ folder from being tracked (if accidentally created)
+~/
+~/

@@ -1,0 +1,101 @@
+---
+description: AI rules derived by SpecStory from the project AI interaction history
+globs: *
+---
+
+## PROJECT OVERVIEW
+
+## CODE STYLE
+
+## FOLDER ORGANIZATION
+
+When organizing images, they should be organized into subfolders within the `Images` folder:
+
+1. Covers: `Images/Covers/` (album covers)
+2. Logos: `Images/Logos/` (band logos)
+3. Artists: `Images/Artists/` (artist images)
+
+If `organize_by_artist: true` is enabled, all files for an artist (audio, covers, logos, artist images) are placed in `Audio/{Artist}/` folder.
+
+## TECH STACK
+
+## PROJECT-SPECIFIC STANDARDS
+
+When handling GitHub authentication, the following strategy should be used in the `ghu` script:
+
+1. Prefer the `gh auth token` first, using the full path `/opt/homebrew/bin/gh` for Automator compatibility.
+2. Fall back to the Keychain token only if `gh` isn't available.
+3. Use the full path to `gh` so it works from Automator even with a minimal PATH.
+
+When uploading files, especially logos or images, the filename should be adjusted as follows:
+
+1. If the filename is generic (e.g., "logo.png", "artist.jpg", "cover.png"), attempt to extract the artist name from the file path.
+2. If an artist name is successfully extracted:
+   - By default, prepend the artist name to the filename in a compact, lowercase format without spaces (e.g., "carnifex-logo.png").
+   - This behavior can be modified using the `generic_name_spaced_format` configuration option. If set to `True`, the filename will use a spaced format with capitalized artist name (e.g., "Carnifex logo.png").
+
+When uploading album covers, the following naming logic should be used:
+
+1. Extract the artist and album name from the path.
+2. Format as "Artist - Album Name.jpg".
+
+When uploading audio files, the filename should be adjusted as follows:
+
+1. Extract the artist name from the path (skips album directories that match year patterns like "1993 - Represent").
+2. Remove leading track numbers (e.g., "01. ", "02. ", "10. ").
+3. Format as "Artist - Title.mp3" with spaces preserved. For example:
+   - `/Volumes/Eksternal/Audio/Hip-Hop/F/Fat Joe/1993 - Represent/02. Livin' Fat.mp3` → `Fat Joe - Livin' Fat.mp3`
+   - `/Volumes/Eksternal/Audio/Metal/H/Haggus/2025 - Destination Extinction/01. Rotting Off.mp3` → `Haggus - Rotting Off.mp3`
+
+When uploading files to GitHub, the API requires URL-encoded paths if they contain spaces or special characters. Ensure proper encoding to avoid upload errors.
+
+When generating markdown links, the original local filename should be used for the display text for audio files, while the URL should point to the processed remote filename. For image files, the processed remote filename should be used for the display text. This preserves the original filename in markdown even if it was renamed during upload and provides meaningful names for album covers.
+
+## WORKFLOW & RELEASE RULES
+
+When encountering "URL can't contain control characters" errors, it means the GitHub API requires URL-encoded paths if they contain spaces or special characters. Ensure proper encoding to avoid upload errors.
+
+## REFERENCE EXAMPLES
+
+With `organize_by_artist: true`:
+
+```
+Audio/
+└── Cold Steel/
+    ├── Cold Steel - Rotting Off.mp3
+    ├── Cold Steel - 2023 - Deeper Into Greater Pain.jpg  (cover)
+    ├── coldsteel-logo.png
+    └── coldsteel-artist.jpg
+```
+
+Without `organize_by_artist` (current behavior):
+
+```
+Audio/
+└── Cold Steel - Rotting Off.mp3
+Images/
+├── Covers/
+│   └── Cold Steel - 2023 - Deeper Into Greater Pain.jpg
+├── Logos/
+│   └── coldsteel-logo.png
+└── Artists/
+    └── coldsteel-artist.jpg
+```
+
+Audio files: `Audio/{Artist}/{filename}`
+Related images (covers, logos, artist images): Also go to `Audio/{Artist}/`
+Other images (not artist-related): Still go to `Images/`
+Artist name is extracted from the path (skips album directories)
+
+## PROJECT DOCUMENTATION & CONTEXT SYSTEM
+
+Image files should use `![...]` syntax for embedding in Markdown:
+
+1. Images: `![filename.jpg](url)`
+2. Audio: `[filename.mp3](url)` (unchanged)
+
+## DEBUGGING
+
+When encountering "URL can't contain control characters" errors, it means the GitHub API requires URL-encoded paths if they contain spaces or special characters. Ensure proper encoding to avoid upload errors.
+
+## FINAL DOs AND DON'Ts
