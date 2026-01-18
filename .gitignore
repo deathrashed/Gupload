@@ -28,6 +28,14 @@ config.json
 *.swo
 *~
 
+# Cursor IDE (editor-specific config)
+.cursor/
+.cursorignore
+.cursorindexingignore
+
+# SpecStory (AI documentation tool)
+.specstory/
+
 # Data
 data/logs/*.log
 
@@ -36,6 +44,6 @@ data/logs/*.log
 Uploads/
 uploads/
 
-# Prevent ~ folder from being tracked (if accidentally created)
-~/
-~/
+
+.cursorignore
+.cursorindexingignore
