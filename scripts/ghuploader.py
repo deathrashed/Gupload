@@ -424,6 +424,8 @@ def check_file_exists_remote(cfg, token, remote_path):
 
 def build_repo_path(cfg, local_path, token=None):
     base = cfg.get("repo_path_prefix", "")
+    # Always use Uploads/ as the root folder for uploads (allows users to clone without uploads)
+    uploads_root = "Uploads"
     cat = category_for_path(local_path)
 
     # Get original filename before sanitization (needed for audio track number removal)
@@ -520,7 +522,9 @@ def build_repo_path(cfg, local_path, token=None):
     elif dedup == "sequential" and token:
         # Check remote and append number if exists
         root, ext = os.path.splitext(fname)
-        base_path = f"{base}/{cat}" if base else cat
+        # Use Uploads/ as root for path checks
+        uploads_root = "Uploads"
+        base_path = f"{base}/{uploads_root}/{cat}" if base else f"{uploads_root}/{cat}"
 
         # Check if base filename exists
         test_path = f"{base_path}/{fname}"
@@ -550,12 +554,13 @@ def build_repo_path(cfg, local_path, token=None):
                 artist_name = extract_artist_from_path(local_path)
     
     # Build path with optional base prefix and organization
+    # All uploads go under Uploads/ folder
     if organize_by_artist and artist_name:
-        # Everything goes into Audio/{Artist}/ folder
+        # Everything goes into Uploads/Audio/{Artist}/ folder
         if base:
-            return f"{base}/Audio/{artist_name}/{fname}", cat
+            return f"{base}/{uploads_root}/Audio/{artist_name}/{fname}", cat
         else:
-            return f"Audio/{artist_name}/{fname}", cat
+            return f"{uploads_root}/Audio/{artist_name}/{fname}", cat
     elif cat == "Scripts":
         # Handle script language subfolders and package structures
         ext = os.path.splitext(local_path)[1].lower()
@@ -565,7 +570,7 @@ def build_repo_path(cfg, local_path, token=None):
         is_package, package_root, rel_path = detect_package_structure(local_path)
         
         if is_package and package_root and rel_path:
-            # Preserve package structure under Scripts/{Language}/package-name/...
+            # Preserve package structure under Uploads/Scripts/{Language}/package-name/...
             package_name = sanitize_filename(os.path.basename(package_root))
             # Convert relative path to use sanitized filenames but preserve structure
             rel_parts = rel_path.split(os.sep)
@@ -573,15 +578,15 @@ def build_repo_path(cfg, local_path, token=None):
             package_path = "/".join(sanitized_parts)
             
             if base:
-                return f"{base}/{cat}/{language_folder}/{package_name}/{package_path}", cat
+                return f"{base}/{uploads_root}/{cat}/{language_folder}/{package_name}/{package_path}", cat
             else:
-                return f"{cat}/{language_folder}/{package_name}/{package_path}", cat
+                return f"{uploads_root}/{cat}/{language_folder}/{package_name}/{package_path}", cat
         else:
             # Standalone script, just use language subfolder
             if base:
-                return f"{base}/{cat}/{language_folder}/{fname}", cat
+                return f"{base}/{uploads_root}/{cat}/{language_folder}/{fname}", cat
             else:
-                return f"{cat}/{language_folder}/{fname}", cat
+                return f"{uploads_root}/{cat}/{language_folder}/{fname}", cat
     elif cat == "Images" and cfg.get("use_image_subfolders", True):
         # Original image subfolder organization (Covers, Logos, Artists)
         image_type = get_image_type(original_basename)
@@ -594,15 +599,15 @@ def build_repo_path(cfg, local_path, token=None):
             subfolder = subfolder_map.get(image_type)
             if subfolder:
                 if base:
-                    return f"{base}/{cat}/{subfolder}/{fname}", cat
+                    return f"{base}/{uploads_root}/{cat}/{subfolder}/{fname}", cat
                 else:
-                    return f"{cat}/{subfolder}/{fname}", cat
+                    return f"{uploads_root}/{cat}/{subfolder}/{fname}", cat
     
-    # Standard path building
+    # Standard path building - all under Uploads/
     if base:
-        return f"{base}/{cat}/{fname}", cat
+        return f"{base}/{uploads_root}/{cat}/{fname}", cat
     else:
-        return f"{cat}/{fname}", cat
+        return f"{uploads_root}/{cat}/{fname}", cat
 
 def upload_contents_api(cfg, token, local_path, remote_path, category):
     owner = cfg["owner"]

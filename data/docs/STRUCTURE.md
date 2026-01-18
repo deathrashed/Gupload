@@ -23,25 +23,28 @@ Gupload/
 │   │   └── STRUCTURE.md         # This file
 │   └── logs/                     # Local log files (if used)
 │
-└── uploads/                      # Example/test uploads (git tracked)
+└── Uploads/                      # All uploads go here (git ignored, personal files)
     └── [category]/               # Category folders:
                                   #   - Audio: Audio files (.mp3, .flac, etc.)
                                   #   - Images: Image files (.png, .jpg, etc.)
                                   #   - Video: Video files (.mp4, .mov, etc.)
                                   #   - Scripts: Scripts organized by language:
-                                  #     * Scripts/Python/ - Python scripts (.py)
-                                  #     * Scripts/Go/ - Go modules (.go, preserves module structure)
-                                  #     * Scripts/Ruby/ - Ruby scripts/gems (.rb, preserves gem structure)
-                                  #     * Scripts/Applescript/ - AppleScript files (.applescript, .scpt)
-                                  #     * Scripts/Shell/ - Shell scripts (.sh, .bash, .zsh)
-                                  #     * Scripts/JavaScript/ - JavaScript/TypeScript (.js, .ts)
-                                  #     * Scripts/*/ - Other languages in language-specific folders
-                                  #     Package/module structures are preserved (e.g., Scripts/Python/mypackage/module.py)
+                                  #     * Uploads/Scripts/Python/ - Python scripts (.py)
+                                  #     * Uploads/Scripts/Go/ - Go modules (.go, preserves module structure)
+                                  #     * Uploads/Scripts/Ruby/ - Ruby scripts/gems (.rb, preserves gem structure)
+                                  #     * Uploads/Scripts/Applescript/ - AppleScript files (.applescript, .scpt)
+                                  #     * Uploads/Scripts/Shell/ - Shell scripts (.sh, .bash, .zsh)
+                                  #     * Uploads/Scripts/JavaScript/ - JavaScript/TypeScript (.js, .ts)
+                                  #     * Uploads/Scripts/*/ - Other languages in language-specific folders
+                                  #     Package/module structures are preserved (e.g., Uploads/Scripts/Python/mypackage/module.py)
                                   #   - Documents: Text files (.txt, .md, etc.)
                                   #   - Docs: Office documents (.pdf, .doc, etc.)
                                   #   - Data: Data files (.json, .yaml, .csv, etc.)
                                   #   - Archives: Archives (.zip, .tar.gz, etc.)
                                   #   - Other: Everything else
+                                  #
+                                  # Note: Uploads/ folder is excluded from git via .gitignore
+                                  #       This allows users to clone the repository without personal uploads
 ```
 
 ## File Purposes

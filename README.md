@@ -168,7 +168,7 @@ The interactive menu provides:
 
 # Upload a script
 ./ghu ~/Scripts/my-script.py
-# Output: [my-script.py](https://raw.githubusercontent.com/.../Scripts/Python/my-script.py)
+# Output: [my-script.py](https://raw.githubusercontent.com/.../Uploads/Scripts/Python/my-script.py)
 
 # Upload multiple artist assets
 ./scripts/upload-artist-assets.sh "/Volumes/Audio/Metal/C/Cold Steel"
@@ -202,35 +202,39 @@ Files are automatically organized into categories:
 ### Default Organization (by Category)
 
 ```
-Audio/
-Images/
-  ├── Covers/
-  ├── Logos/
-  └── Artists/
-Video/
-Scripts/
-  ├── Python/
-  ├── Go/
-  ├── Ruby/
-  └── ...
-Documents/
-Docs/
-Data/
-Archives/
-Other/
+Uploads/
+├── Audio/
+├── Images/
+│   ├── Covers/
+│   ├── Logos/
+│   └── Artists/
+├── Video/
+├── Scripts/
+│   ├── Python/
+│   ├── Go/
+│   ├── Ruby/
+│   └── ...
+├── Documents/
+├── Docs/
+├── Data/
+├── Archives/
+└── Other/
 ```
+
+**Note:** The `Uploads/` folder is excluded from git (via `.gitignore`) so users can clone the repository without personal uploads.
 
 ### Artist-Based Organization (Optional)
 
 Enable `organize_by_artist: true` in config:
 
 ```
-Audio/
-  └── Cold Steel/
-      ├── Cold Steel - Rotting Off.mp3
-      ├── Cold Steel - 2023 - Deeper Into Greater Pain.jpg
-      ├── coldsteel-logo.png
-      └── coldsteel-artist.jpg
+Uploads/
+└── Audio/
+    └── Cold Steel/
+        ├── Cold Steel - Rotting Off.mp3
+        ├── Cold Steel - 2023 - Deeper Into Greater Pain.jpg
+        ├── coldsteel-logo.png
+        └── coldsteel-artist.jpg
 ```
 
 ## Features in Detail
@@ -246,9 +250,9 @@ Audio/
 - `02. Livin' Fat.mp3` → `Fat Joe - Livin' Fat.mp3` (removes track numbers, adds artist)
 
 **Package Structure:**
-- Python packages with `__init__.py` preserve structure: `Scripts/Python/mypackage/subpackage/module.py`
-- Go modules with `go.mod` preserve structure: `Scripts/Go/gomodule/subdir/handler.go`
-- Ruby gems with `Gemfile` preserve structure: `Scripts/Ruby/mygem/lib/mygem.rb`
+- Python packages with `__init__.py` preserve structure: `Uploads/Scripts/Python/mypackage/subpackage/module.py`
+- Go modules with `go.mod` preserve structure: `Uploads/Scripts/Go/gomodule/subdir/handler.go`
+- Ruby gems with `Gemfile` preserve structure: `Uploads/Scripts/Ruby/mygem/lib/mygem.rb`
 
 ### Size Handling
 
@@ -360,8 +364,8 @@ Gupload/
 │   ├── docs/                # Documentation files
 │   └── logs/                # Log files (if using local logging)
 │
-└── uploads/                 # Example/test uploads (git tracked)
-    └── [category]/          # Category folders
+└── Uploads/                 # All uploads go here (git ignored, personal files)
+    └── [category]/          # Category folders (Audio, Images, Scripts, etc.)
 ```
 
 ## Additional Documentation

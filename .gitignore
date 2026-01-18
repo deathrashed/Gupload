@@ -30,3 +30,7 @@ config.json
 
 # Data
 data/logs/*.log
+
+# Uploads folder (contains personal uploads, users can clone without it)
+Uploads/
+uploads/
