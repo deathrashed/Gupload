@@ -1,6 +1,8 @@
-# Gupload
-
-A powerful GitHub-based file hosting system that uploads files to GitHub repositories and returns markdown/HTML links. Perfect for hosting media files, scripts, documents, and more with automatic organization and smart naming.
+<div align="center">
+  <img src="data/assets/icon.png" alt="Gupload Icon" width="120" height="120">
+  <h1>Gupload</h1>
+  <p>A powerful GitHub-based file hosting system that uploads files to GitHub repositories and returns markdown/HTML links. Perfect for hosting media files, scripts, documents, and more with automatic organization and smart naming.</p>
+</div>
 
 ## Features
 
@@ -297,24 +299,88 @@ All utility scripts are located in `scripts/`:
 
 ## Security
 
-⚠️ **Important Security Considerations:**
+<details>
+<summary><strong>🔒 Security Audit & Best Practices</strong> (Click to expand)</summary>
 
-1. **Never commit tokens or credentials** to version control
-2. **Use environment variables** or GitHub CLI for authentication (preferred)
-3. **Limit token scopes** - Only grant necessary permissions (`repo` scope for private repos)
-4. **Rotate tokens regularly** - Especially if shared or exposed
-5. **Use repository secrets** in CI/CD environments
-6. **Be cautious with public repositories** - Uploaded files are publicly accessible
+### Security Audit
 
-### Best Practices
+This repository has been audited for security issues:
 
-- ✅ Use `gh auth login` for local development
-- ✅ Use environment variables for CI/CD
-- ✅ Store tokens in macOS Keychain only on secure systems
-- ✅ Review uploaded files before making repository public
-- ❌ Never hardcode tokens in scripts
-- ❌ Never commit `config.json` with tokens
-- ❌ Don't share tokens via insecure channels
+✅ **No exposed tokens or secrets found**
+- No hardcoded GitHub tokens (ghp_* or github_pat_*)
+- No API keys or passwords in code
+- Configuration files excluded from git (`.gitignore`)
+- Only documentation references to authentication
+
+✅ **Secure Configuration**
+- `.gitignore` properly configured to exclude sensitive files
+- `config.json` excluded from version control
+- Log files excluded from git
+- Uploads folder excluded from git
+
+### Security Best Practices
+
+#### Authentication Methods (in order of preference)
+
+1. **GitHub CLI** (Recommended for local use)
+   ```bash
+   gh auth login
+   ```
+
+2. **Environment Variables** (Recommended for CI/CD)
+   ```bash
+   export GITHUB_TOKEN="your_token_here"
+   # or
+   export GH_TOKEN="your_token_here"
+   ```
+
+3. **macOS Keychain** (For persistent local storage)
+   ```bash
+   security add-generic-password -s "GuploadGitHubToken" -w "YOUR_TOKEN" -a "$USER"
+   ```
+
+#### Token Security
+
+⚠️ **Critical Guidelines:**
+
+- ❌ **Never commit tokens** to version control
+- ❌ **Never hardcode tokens** in scripts or config files
+- ❌ **Never share tokens** via insecure channels (email, chat, etc.)
+- ❌ **Never commit `config.json`** with actual tokens
+- ✅ **Use environment variables** or GitHub CLI (preferred)
+- ✅ **Limit token scopes** - Only grant necessary permissions (`repo` scope for private repos)
+- ✅ **Rotate tokens regularly** - Especially if exposed or shared
+- ✅ **Use repository secrets** in CI/CD environments (GitHub Actions secrets, etc.)
+- ✅ **Review uploaded files** before making repository public
+
+#### Repository Security
+
+- **Public Repositories**: All uploaded files are publicly accessible via GitHub URLs
+- **Private Repositories**: Files are only accessible with proper authentication
+- **Large Files**: Files >95MB are uploaded as release assets (check release visibility settings)
+
+### Creating a GitHub Token
+
+1. Go to [GitHub Settings > Developer settings > Personal access tokens](https://github.com/settings/tokens)
+2. Click "Generate new token (classic)"
+3. Select scopes: `repo` (full control of private repositories) - minimum required
+4. Copy the token immediately (you won't see it again)
+5. Use one of the authentication methods above - **never commit it**
+
+### If You Accidentally Commit a Token
+
+1. **Revoke the token immediately** in GitHub settings
+2. **Create a new token** with the same permissions
+3. **Update your authentication** method with the new token
+4. If the token was pushed to a public repo, consider it compromised and create a new one
+
+### File Security
+
+- Uploaded files are committed to the repository via GitHub API
+- Files in `Uploads/` folder are excluded from git (via `.gitignore`)
+- Review file contents before uploading (especially scripts or configs)
+
+</details>
 
 ## Troubleshooting
 
