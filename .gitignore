@@ -1,0 +1,32 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# Config (contains secrets)
+config.json
+~/.config/ghuploader/config.json
+*.log
+
+# Sensitive data
+.env
+.env.local
+*.key
+*.pem
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Data
+data/logs/*.log

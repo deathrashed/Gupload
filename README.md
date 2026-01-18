@@ -1,0 +1,375 @@
+# Gupload
+
+A powerful GitHub-based file hosting system that uploads files to GitHub repositories and returns markdown/HTML links. Perfect for hosting media files, scripts, documents, and more with automatic organization and smart naming.
+
+## Features
+
+- 🚀 **Automatic Categorization** - Files organized by type (Audio, Images, Video, Scripts, Documents, Docs, Data, Archives, Other)
+- 📦 **Script Language Organization** - Scripts organized by language (Python, Go, Ruby, AppleScript, Shell, JavaScript, TypeScript, etc.)
+- 🏗️ **Package Structure Preservation** - Detects package/module structures (Python packages, Go modules, Ruby gems) and preserves folder hierarchy
+- 🎵 **Smart Naming** - Automatically extracts artist/album names from file paths for audio files and images
+- 🎨 **Artist Organization** - Optional organization of all artist files (audio, covers, logos) in artist folders
+- 📁 **Image Subfolders** - Organizes covers, logos, and artist images into separate subfolders
+- 📏 **Size Handling** - Small files (<95MB) via Contents API, large files (95MB-2GB) via Releases API
+- 🎛️ **Interactive Menu** - Full-featured terminal menu with fzf search, repo browsing, custom naming, and more
+- 📋 **Clipboard Integration** - Automatically copies markdown/URL links to clipboard (macOS)
+- 🔐 **Secure Authentication** - Supports multiple authentication methods (environment variables, GitHub CLI, macOS Keychain)
+
+## Table of Contents
+
+- [Installation](#installation)
+- [Configuration](#configuration)
+- [Authentication](#authentication)
+- [Usage](#usage)
+- [File Organization](#file-organization)
+- [Features in Detail](#features-in-detail)
+- [Scripts](#scripts)
+- [Security](#security)
+- [Troubleshooting](#troubleshooting)
+- [Contributing](#contributing)
+
+## Installation
+
+### Prerequisites
+
+- Python 3.7+ (comes pre-installed on macOS)
+- GitHub account with a repository for file hosting
+- macOS (for Keychain integration and Finder selection)
+
+### Setup
+
+1. **Clone or download this repository:**
+   ```bash
+   git clone https://github.com/YOUR_USERNAME/Gupload.git
+   cd Gupload
+   ```
+
+2. **Make scripts executable:**
+   ```bash
+   chmod +x ghu scripts/*.sh
+   ```
+
+3. **Install optional dependencies:**
+   ```bash
+   pip3 install mutagen  # Optional: for audio metadata extraction
+   ```
+
+4. **Configure:**
+   ```bash
+   mkdir -p ~/.config/ghuploader
+   cp data/config.example.json ~/.config/ghuploader/config.json
+   # Edit config.json with your settings (see Configuration section)
+   ```
+
+## Configuration
+
+Edit `~/.config/ghuploader/config.json` with your settings:
+
+```json
+{
+  "owner": "your-github-username",
+  "repo": "your-repo-name",
+  "branch": "main",
+  
+  "use_path_for_generic_names": true,
+  "use_path_for_audio_names": true,
+  "organize_by_artist": false,
+  "use_image_subfolders": true,
+  
+  "output_mode": "markdown",
+  "also_audio_html": true,
+  
+  "contents_max_mb": 95,
+  "release_tag": "gupload-uploads"
+}
+```
+
+See `data/config.example.json` for all available configuration options.
+
+### Key Configuration Options
+
+- **`owner`** - Your GitHub username (required)
+- **`repo`** - Repository name for hosting files (required)
+- **`branch`** - Branch to upload files to (default: "main")
+- **`organize_by_artist`** - If `true`, organizes all artist files (audio, images) into `Audio/{Artist}/` folders
+- **`use_image_subfolders`** - If `true`, organizes images into `Images/Covers/`, `Images/Logos/`, `Images/Artists/`
+- **`output_mode`** - Output format: `"markdown"`, `"url"`, or `"both"`
+- **`contents_max_mb`** - Maximum file size for Contents API (default: 95MB). Larger files use Releases API.
+
+## Authentication
+
+Gupload supports multiple secure authentication methods (in order of priority):
+
+### 1. Environment Variables (Recommended for CI/CD)
+```bash
+export GITHUB_TOKEN="your_token_here"
+# or
+export GH_TOKEN="your_token_here"
+```
+
+### 2. GitHub CLI (Recommended for local use)
+```bash
+gh auth login
+```
+Gupload will automatically use your GitHub CLI authentication token.
+
+### 3. macOS Keychain (For persistent local authentication)
+```bash
+security add-generic-password -s "GuploadGitHubToken" -w "YOUR_TOKEN" -a "$USER"
+```
+
+⚠️ **Security Note:** Never commit tokens to version control. Always use environment variables, GitHub CLI, or Keychain.
+
+### Creating a GitHub Token
+
+1. Go to [GitHub Settings > Developer settings > Personal access tokens](https://github.com/settings/tokens)
+2. Click "Generate new token (classic)"
+3. Select scopes: `repo` (full control of private repositories)
+4. Copy the token immediately (you won't see it again)
+5. Use one of the authentication methods above
+
+## Usage
+
+### Command Line
+
+```bash
+# Upload single file
+./ghu /path/to/file.mp3
+
+# Upload multiple files
+./ghu file1.jpg file2.pdf file3.mp4
+
+# Via stdin (paths, one per line)
+echo -e "/path/to/file1.mp3\n/path/to/file2.jpg" | ./ghu
+
+# Via Finder (macOS) - run without args, select files in Finder
+./ghu
+```
+
+### Interactive Menu
+
+```bash
+./scripts/gupload-menu.sh
+```
+
+The interactive menu provides:
+- 📁 **File Upload** - Single file (fzf search or manual), multiple files, Finder selection, folder/archive
+- 🔍 **Browse Repo** - List existing artists/files in repository, add files to existing paths
+- 🎵 **Audio Tools** - Browse artists, upload artist assets (covers, logos), upload audio files
+- ⚙️ **Configure** - Change clipboard output mode (markdown, URL, both)
+- 📜 **View Logs** - View recent uploads or live log tail
+
+### Quick Examples
+
+```bash
+# Upload an album cover
+./ghu "/Volumes/Audio/Metal/C/Cold Steel/2023 - Deeper Into Greater Pain/cover.jpg"
+# Output: ![Cold Steel - 2023 - Deeper Into Greater Pain.jpg](https://raw.githubusercontent.com/...)
+
+# Upload a script
+./ghu ~/Scripts/my-script.py
+# Output: [my-script.py](https://raw.githubusercontent.com/.../Scripts/Python/my-script.py)
+
+# Upload multiple artist assets
+./scripts/upload-artist-assets.sh "/Volumes/Audio/Metal/C/Cold Steel"
+# Uploads all cover.jpg, logo.png, and artist.jpg files for the artist
+```
+
+## File Organization
+
+### Automatic Categorization
+
+Files are automatically organized into categories:
+
+- **Audio** - `.mp3`, `.flac`, `.wav`, `.m4a`, etc.
+- **Images** - `.png`, `.jpg`, `.svg`, `.webp`, etc.
+- **Video** - `.mp4`, `.mov`, `.mkv`, `.webm`, etc.
+- **Scripts** - Organized by language:
+  - `Scripts/Python/` - Python scripts (`.py`)
+  - `Scripts/Go/` - Go modules (`.go`, preserves module structure)
+  - `Scripts/Ruby/` - Ruby scripts/gems (`.rb`, preserves gem structure)
+  - `Scripts/Applescript/` - AppleScript files (`.applescript`, `.scpt`)
+  - `Scripts/Shell/` - Shell scripts (`.sh`, `.bash`, `.zsh`)
+  - `Scripts/JavaScript/` - JavaScript files (`.js`)
+  - `Scripts/TypeScript/` - TypeScript files (`.ts`)
+  - And more...
+- **Documents** - Text files (`.txt`, `.md`, `.markdown`)
+- **Docs** - Office documents (`.pdf`, `.doc`, `.docx`, `.xlsx`)
+- **Data** - Data files (`.json`, `.yaml`, `.csv`, `.xml`)
+- **Archives** - Archive files (`.zip`, `.tar.gz`, `.7z`)
+- **Other** - Everything else
+
+### Default Organization (by Category)
+
+```
+Audio/
+Images/
+  ├── Covers/
+  ├── Logos/
+  └── Artists/
+Video/
+Scripts/
+  ├── Python/
+  ├── Go/
+  ├── Ruby/
+  └── ...
+Documents/
+Docs/
+Data/
+Archives/
+Other/
+```
+
+### Artist-Based Organization (Optional)
+
+Enable `organize_by_artist: true` in config:
+
+```
+Audio/
+  └── Cold Steel/
+      ├── Cold Steel - Rotting Off.mp3
+      ├── Cold Steel - 2023 - Deeper Into Greater Pain.jpg
+      ├── coldsteel-logo.png
+      └── coldsteel-artist.jpg
+```
+
+## Features in Detail
+
+### Smart Naming
+
+**Generic Image Files:**
+- `logo.png` → `carnifex-logo.png` (extracts artist from path)
+- `artist.jpg` → `Fat Joe artist.jpg` (with spaced format option)
+- `cover.jpg` → `Cold Steel - 2023 - Deeper Into Greater Pain.jpg` (includes album)
+
+**Audio Files:**
+- `02. Livin' Fat.mp3` → `Fat Joe - Livin' Fat.mp3` (removes track numbers, adds artist)
+
+**Package Structure:**
+- Python packages with `__init__.py` preserve structure: `Scripts/Python/mypackage/subpackage/module.py`
+- Go modules with `go.mod` preserve structure: `Scripts/Go/gomodule/subdir/handler.go`
+- Ruby gems with `Gemfile` preserve structure: `Scripts/Ruby/mygem/lib/mygem.rb`
+
+### Size Handling
+
+- **Small files (<95MB)**: Uploaded via GitHub Contents API → stored directly in repository
+- **Large files (95MB-2GB)**: Uploaded via GitHub Releases API → attached to release (default tag: `gupload-uploads`)
+
+### Output Formats
+
+**Markdown (default):**
+```markdown
+[Cold Steel - Front to Enemy.mp3](https://raw.githubusercontent.com/...)
+<audio controls src="https://raw.githubusercontent.com/..."></audio>
+
+![Cold Steel - 2023 - Deeper Into Greater Pain.jpg](https://raw.githubusercontent.com/...)
+```
+
+**URL only:**
+```
+https://raw.githubusercontent.com/...
+```
+
+**Both:**
+Includes both markdown and URL.
+
+Output is automatically copied to clipboard (macOS).
+
+## Scripts
+
+All utility scripts are located in `scripts/`:
+
+- **`gupload-menu.sh`** - Interactive menu for all upload operations
+- **`upload-artist-assets.sh`** - Batch upload artist assets (covers, logos, artist images)
+- **`list-repo-artists.py`** - List artists already in the repository (used by menu)
+
+## Security
+
+⚠️ **Important Security Considerations:**
+
+1. **Never commit tokens or credentials** to version control
+2. **Use environment variables** or GitHub CLI for authentication (preferred)
+3. **Limit token scopes** - Only grant necessary permissions (`repo` scope for private repos)
+4. **Rotate tokens regularly** - Especially if shared or exposed
+5. **Use repository secrets** in CI/CD environments
+6. **Be cautious with public repositories** - Uploaded files are publicly accessible
+
+### Best Practices
+
+- ✅ Use `gh auth login` for local development
+- ✅ Use environment variables for CI/CD
+- ✅ Store tokens in macOS Keychain only on secure systems
+- ✅ Review uploaded files before making repository public
+- ❌ Never hardcode tokens in scripts
+- ❌ Never commit `config.json` with tokens
+- ❌ Don't share tokens via insecure channels
+
+## Troubleshooting
+
+### "Bad credentials" error
+- Verify your token is valid and has correct permissions
+- Try re-authenticating: `gh auth login`
+- Check if token expired (tokens can expire if set to expire)
+
+### "File too large" error
+- Large files (>95MB) are automatically handled via Releases API
+- Very large files (>2GB) are not supported (GitHub limit)
+
+### Script not found errors
+- Ensure scripts are executable: `chmod +x ghu scripts/*.sh`
+- Check that you're in the correct directory or scripts are in PATH
+
+### Upload failures
+- Check repository permissions (you need write access)
+- Verify branch name in config matches your repository
+- Check network connectivity
+- Review logs: `/tmp/gupload.log`
+
+### Package structure not preserved
+- Ensure package indicators exist (`__init__.py`, `go.mod`, `Gemfile`, etc.)
+- Upload all related files together for best results
+
+## Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request.
+
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
+
+## License
+
+This project is licensed under the MIT License - see the LICENSE file for details.
+
+## Repository Structure
+
+```
+Gupload/
+├── ghu                      # Main wrapper script (macOS integration)
+│
+├── scripts/                 # All scripts
+│   ├── ghuploader.py        # Core Python upload logic
+│   ├── gupload-menu.sh      # Interactive menu tool
+│   ├── upload-artist-assets.sh  # Batch upload artist assets
+│   └── list-repo-artists.py     # List artists from repo
+│
+├── data/                    # Data and documentation
+│   ├── config.example.json  # Example configuration file
+│   ├── docs/                # Documentation files
+│   └── logs/                # Log files (if using local logging)
+│
+└── uploads/                 # Example/test uploads (git tracked)
+    └── [category]/          # Category folders
+```
+
+## Additional Documentation
+
+- See `data/docs/USAGE.md` for detailed usage guide
+- See `data/docs/STRUCTURE.md` for repository structure documentation
+- See `CLAUDE.md` for development documentation
+
+---
+
+**Made with ❤️ for easy file hosting on GitHub**
