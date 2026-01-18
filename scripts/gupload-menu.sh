@@ -706,7 +706,8 @@ upload_artist_assets() {
     fi
     
     echo
-    "$UPLOAD_ASSETS_SCRIPT" "$artist_path"
+    # Pass GHU path to child script via environment
+    GHU="$GHU" "$UPLOAD_ASSETS_SCRIPT" "$artist_path"
     echo
     wait_for_q
 }

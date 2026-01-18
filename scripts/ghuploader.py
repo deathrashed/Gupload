@@ -694,16 +694,19 @@ def upload_release_asset(cfg, token, local_path, category):
     return resp.get("browser_download_url")
 
 def format_links(cfg, local_path, url, remote_path=None):
-    # For images: use processed remote filename (better readability)
+    # For images and audio: use processed remote filename (better readability)
     # For other files: use original local filename (preserves original name)
     cat = category_for_path(local_path)
     is_image = cat == "Images"
+    is_audio = cat == "Audio"
     
-    if is_image and remote_path:
-        # Images should use the processed filename (e.g., "Cold Steel - 2023 - Deeper Into Greater Pain.jpg")
+    if remote_path and (is_image or is_audio):
+        # Images and audio should use the processed filename
+        # Images: e.g., "Cold Steel - 2023 - Deeper Into Greater Pain.jpg"
+        # Audio: e.g., "Condition Critical - Voluntary Disfigurement.mp3" (not "04. Voluntary Disfigurement.mp3")
         display_fname = os.path.basename(remote_path)
     else:
-        # Audio and other files use original local filename
+        # Other files use original local filename
         display_fname = os.path.basename(local_path)
     
     mode = cfg.get("output_mode", "markdown")  # markdown | url | both
@@ -772,8 +775,10 @@ def main(argv):
                 url = upload_release_asset(cfg, token, p, category)
                 if not url:
                     raise RuntimeError("No browser_download_url returned for release upload.")
-                # For release assets, we don't have a remote_path, so use None
-                out_blocks.append(format_links(cfg, p, url, None))
+                # For release assets, build a remote_path for display purposes (even though file is in release)
+                # This ensures audio files show the processed filename in markdown
+                remote_path_for_display, _ = build_repo_path(cfg, p, token)
+                out_blocks.append(format_links(cfg, p, url, remote_path_for_display))
                 if verbose:
                     eprint(f"  ✓ Uploaded: {url}")
 
