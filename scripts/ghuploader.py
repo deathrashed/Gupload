@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import argparse
 import base64
 import datetime as dt
 import hashlib
@@ -8,12 +9,15 @@ import os
 import re
 import subprocess
 import sys
+import tempfile
 import time
 import urllib.parse
 import urllib.request
 import urllib.error
 
 CONFIG_PATH = os.path.expanduser("~/.config/ghuploader/config.json")
+DATA_DIR = os.path.expanduser("~/.config/ghuploader/data")
+RECENT_FILE = os.path.join(DATA_DIR, "recent.json")
 
 AUDIO_EXT = {".mp3",".m4a",".aac",".wav",".flac",".ogg",".opus",".aiff",".alac",".wma"}
 IMAGE_EXT = {".png",".jpg",".jpeg",".webp",".gif",".tif",".tiff",".bmp",".svg",".heic",".avif"}
@@ -36,6 +40,66 @@ def load_config():
 
 def run(cmd):
     return subprocess.check_output(cmd, text=True).strip()
+
+def download_url(url, output_path=None):
+    """Download a file from a URL to a temporary or specified file path.
+    
+    Args:
+        url: URL to download from
+        output_path: Optional path to save file. If None, creates a temp file.
+    
+    Returns:
+        Path to downloaded file
+        
+    Raises:
+        Exception if download fails
+    """
+    try:
+        # Create request with headers to avoid blocking
+        req = urllib.request.Request(url, headers={
+            'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36'
+        })
+        
+        with urllib.request.urlopen(req, timeout=30) as response:
+            # Get filename from Content-Disposition header or URL
+            content_disposition = response.headers.get('Content-Disposition', '')
+            if output_path is None:
+                # Try to extract filename from URL or Content-Disposition
+                filename = None
+                if content_disposition:
+                    match = re.search(r'filename=["\']?([^"\']+)["\']?', content_disposition)
+                    if match:
+                        filename = match.group(1)
+                
+                if not filename:
+                    # Extract from URL
+                    parsed = urllib.parse.urlparse(url)
+                    filename = os.path.basename(parsed.path)
+                    if not filename or '.' not in filename:
+                        # Guess extension from Content-Type
+                        content_type = response.headers.get('Content-Type', '')
+                        ext = mimetypes.guess_extension(content_type.split(';')[0].strip()) or '.jpg'
+                        filename = f"downloaded{ext}"
+                
+                # Create temp file with proper extension
+                fd, output_path = tempfile.mkstemp(suffix=os.path.splitext(filename)[1], prefix='gupload_')
+                os.close(fd)
+            
+            # Download to file
+            with open(output_path, 'wb') as f:
+                while True:
+                    chunk = response.read(8192)
+                    if not chunk:
+                        break
+                    f.write(chunk)
+            
+            return output_path
+    except Exception as e:
+        raise RuntimeError(f"Failed to download {url}: {e}")
+
+def is_url(path):
+    """Check if the path is a URL."""
+    return path.startswith('http://') or path.startswith('https://')
 
 def get_token(cfg):
     for k in ("GITHUB_TOKEN", "GH_TOKEN"):
@@ -192,6 +256,39 @@ def clipboard_set(text: str):
         p = subprocess.Popen(["pbcopy"], stdin=subprocess.PIPE)
         p.communicate(text.encode("utf-8"))
     except Exception:
+        pass
+
+def log_upload(filepath, filename, url, category):
+    """Log successful upload to recent uploads file."""
+    try:
+        os.makedirs(DATA_DIR, exist_ok=True)
+
+        # Load existing recent uploads
+        if os.path.exists(RECENT_FILE):
+            with open(RECENT_FILE, 'r') as f:
+                recent = json.load(f)
+        else:
+            recent = []
+
+        # Add new upload
+        upload_info = {
+            'filepath': filepath,
+            'filename': filename,
+            'url': url,
+            'category': category,
+            'timestamp': dt.datetime.now().isoformat()
+        }
+        recent.append(upload_info)
+
+        # Keep only last 100 uploads
+        if len(recent) > 100:
+            recent = recent[-100:]
+
+        # Save back to file
+        with open(RECENT_FILE, 'w') as f:
+            json.dump(recent, f, indent=2)
+    except Exception:
+        # Don't fail upload if logging fails
         pass
 
 def category_for_path(path: str) -> str:
@@ -422,11 +519,25 @@ def check_file_exists_remote(cfg, token, remote_path):
     except Exception:
         return False  # File doesn't exist or other error
 
-def build_repo_path(cfg, local_path, token=None):
+def build_repo_path(cfg, local_path, token=None, custom_name=None):
     base = cfg.get("repo_path_prefix", "")
     # Always use Uploads/ as the root folder for uploads (allows users to clone without uploads)
     uploads_root = "Uploads"
     cat = category_for_path(local_path)
+    
+    # If custom name provided, use it directly (with proper extension)
+    if custom_name:
+        # Preserve original extension if custom_name doesn't have one
+        ext = os.path.splitext(local_path)[1]
+        if not os.path.splitext(custom_name)[1]:
+            custom_name = custom_name + ext
+        # Sanitize the custom name
+        fname = sanitize_filename(custom_name, preserve_spaces=True)
+        # Build path with custom name
+        if base:
+            return f"{base}/{uploads_root}/{cat}/{fname}", cat
+        else:
+            return f"{uploads_root}/{cat}/{fname}", cat
 
     # Get original filename before sanitization (needed for audio track number removal)
     original_basename = os.path.basename(local_path)
@@ -728,21 +839,75 @@ def format_links(cfg, local_path, url, remote_path=None):
     return "\n".join(lines)
 
 def main(argv):
+    # Parse arguments
+    parser = argparse.ArgumentParser(description='Upload files to GitHub and get markdown/URL links')
+    parser.add_argument('files', nargs='+', help='File paths or URLs to upload')
+    parser.add_argument('-n', '--name', dest='custom_name', help='Custom filename for single file upload')
+    parser.add_argument('--names', nargs='+', dest='custom_names', help='Custom filenames for multiple files (must match number of files)')
+    parser.add_argument('-v', '--verbose', action='store_true', help='Verbose output')
+    
+    # Parse known args (allow unknown args for backward compatibility)
+    args, unknown = parser.parse_known_args()
+    
+    # If unknown args exist and no --name/--names, assume old-style usage (backward compatibility)
+    if unknown and not args.custom_name and not args.custom_names:
+        # Old-style: files as positional args
+        all_files = args.files + unknown
+        custom_names = None
+        verbose = args.verbose
+    else:
+        all_files = args.files
+        custom_names = [args.custom_name] if args.custom_name else (args.custom_names if args.custom_names else None)
+        verbose = args.verbose
+    
     cfg = load_config()
     token = get_token(cfg)
 
-    if len(argv) < 2:
-        eprint("Usage: ghu <file1> [file2 ...]")
+    if not all_files:
+        eprint("Usage: ghu <file1> [file2 ...] [--name custom_name]")
+        eprint("       ghu <url1> [url2 ...] [--name custom_name]")
         sys.exit(2)
 
     max_contents_mb = float(cfg.get("contents_max_mb", 95))
-    verbose = bool(cfg.get("verbose", False))
+    if not verbose:
+        verbose = bool(cfg.get("verbose", False))
     continue_on_error = bool(cfg.get("continue_on_error", True))
     out_blocks = []
     errors = []
+    temp_files = []  # Track temp files for cleanup
 
-    for i, p in enumerate(argv[1:], 1):
-        p = os.path.expanduser(p)
+    for i, p in enumerate(all_files, 1):
+        original_path = p
+        custom_name = custom_names[i-1] if custom_names and i <= len(custom_names) else None
+        is_url_input = is_url(p)
+        
+        # Download from URL if needed
+        if is_url_input:
+            try:
+                if verbose:
+                    eprint(f"[{i}/{len(all_files)}] Downloading from URL: {p}")
+                p = download_url(p)
+                temp_files.append(p)
+                if verbose:
+                    eprint(f"  → Downloaded to: {p}")
+            except Exception as e:
+                msg = f"Error downloading {original_path}: {e}"
+                eprint(msg)
+                errors.append(msg)
+                if not continue_on_error:
+                    # Cleanup temp files before exiting
+                    for tf in temp_files:
+                        try:
+                            if os.path.exists(tf):
+                                os.remove(tf)
+                        except Exception:
+                            pass
+                    sys.exit(1)
+                continue
+        else:
+            p = os.path.expanduser(p)
+        
+        # Check if file exists
         if not os.path.exists(p) or not os.path.isfile(p):
             msg = f"Skip (not a file): {p}"
             eprint(msg)
@@ -754,10 +919,10 @@ def main(argv):
             size_mb = os.path.getsize(p) / (1024 * 1024)
 
             if verbose:
-                eprint(f"[{i}/{len(argv)-1}] Uploading {os.path.basename(p)} ({size_mb:.1f} MB) as {category}...")
+                eprint(f"[{i}/{len(all_files)}] Uploading {os.path.basename(p)} ({size_mb:.1f} MB) as {category}...")
 
             if size_mb <= max_contents_mb:
-                remote_path, cat = build_repo_path(cfg, p, token)
+                remote_path, cat = build_repo_path(cfg, p, token, custom_name=custom_name)
                 if verbose:
                     eprint(f"  → Repo path: {remote_path}")
                 url = upload_contents_api(cfg, token, p, remote_path, cat)
@@ -765,6 +930,8 @@ def main(argv):
                     raise RuntimeError("No download_url returned for contents upload.")
                 # Pass remote_path so format_links uses the processed filename
                 out_blocks.append(format_links(cfg, p, url, remote_path))
+                # Log successful upload
+                log_upload(p, os.path.basename(remote_path), url, cat)
                 if verbose:
                     eprint(f"  ✓ Uploaded: {url}")
             else:
@@ -777,8 +944,10 @@ def main(argv):
                     raise RuntimeError("No browser_download_url returned for release upload.")
                 # For release assets, build a remote_path for display purposes (even though file is in release)
                 # This ensures audio files show the processed filename in markdown
-                remote_path_for_display, _ = build_repo_path(cfg, p, token)
+                remote_path_for_display, _ = build_repo_path(cfg, p, token, custom_name=custom_name)
                 out_blocks.append(format_links(cfg, p, url, remote_path_for_display))
+                # Log successful upload
+                log_upload(p, os.path.basename(remote_path_for_display), url, category)
                 if verbose:
                     eprint(f"  ✓ Uploaded: {url}")
 
@@ -787,7 +956,22 @@ def main(argv):
             eprint(msg)
             errors.append(msg)
             if not continue_on_error:
+                # Cleanup temp files before exiting
+                for tf in temp_files:
+                    try:
+                        if os.path.exists(tf):
+                            os.remove(tf)
+                    except Exception:
+                        pass
                 sys.exit(1)
+
+    # Cleanup temp files
+    for tf in temp_files:
+        try:
+            if os.path.exists(tf):
+                os.remove(tf)
+        except Exception:
+            pass
 
     if not out_blocks:
         eprint("No files uploaded successfully.")

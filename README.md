@@ -34,6 +34,7 @@ cp data/config.example.json ~/.config/ghuploader/config.json
 
 ## Features
 
+### Core Features
 - 🚀 **Automatic Categorization** - Files organized by type (Audio, Images, Video, Scripts, Documents, Docs, Data, Archives, Other)
 - 📦 **Script Language Organization** - Scripts organized by language (Python, Go, Ruby, AppleScript, Shell, JavaScript, TypeScript, etc.)
 - 🏗️ **Package Structure Preservation** - Detects package/module structures (Python packages, Go modules, Ruby gems) and preserves folder hierarchy
@@ -44,6 +45,20 @@ cp data/config.example.json ~/.config/ghuploader/config.json
 - 🎛️ **Interactive Menu** - Full-featured terminal menu with fzf search, repo browsing, custom naming, and more
 - 📋 **Clipboard Integration** - Automatically copies markdown/URL links to clipboard (macOS)
 - 🔐 **Secure Authentication** - Supports multiple authentication methods (environment variables, GitHub CLI, macOS Keychain)
+
+### Advanced Features ⚡
+- 🔄 **Batch URL Upload** - Upload multiple files from URLs at once with smart naming
+- 🔍 **Duplicate Detection** - Check if files already uploaded before re-uploading
+- 📝 **Upload Templates** - Save and reuse upload configurations for common workflows
+- 📋 **Clipboard Monitor** - Auto-detect and upload files/URLs copied to clipboard
+- 👁️ **File Preview** - View detailed file information before uploading
+- 🔎 **Search & Filter** - Search upload history by filename, category, or date range
+- 📊 **Export History** - Export upload history to CSV, JSON, or Markdown formats
+- 🎨 **Gallery Generation** - Auto-generate image galleries and audio playlists
+- ⭐ **Favorites System** - Quick access to frequently-used paths
+- 📈 **Upload Statistics** - Track and analyze upload patterns
+
+See [ADVANCED_FEATURES.md](ADVANCED_FEATURES.md) for complete guide.
 
 ## Table of Contents
 
@@ -185,6 +200,15 @@ security add-generic-password -s "GuploadGitHubToken" -w "YOUR_TOKEN" -a "$USER"
 
 # Upload multiple files
 ./ghu file1.jpg file2.pdf file3.mp4
+
+# Upload from URL with custom name
+./ghu --name "Deteriorate - 1993 - Rotting in Hell.jpg" https://f4.bcbits.com/img/a1454706092_5.jpg
+
+# Upload multiple URLs with custom names
+./ghu --names "Cover 1.jpg" "Cover 2.jpg" https://example.com/cover1.jpg https://example.com/cover2.jpg
+
+# Helper script for album covers (auto-formats name)
+./scripts/upload-cover.sh https://f4.bcbits.com/img/a1454706092_5.jpg "Deteriorate" "1993" "Rotting in Hell"
 
 # Via stdin (paths, one per line)
 echo -e "/path/to/file1.mp3\n/path/to/file2.jpg" | ./ghu
@@ -494,9 +518,12 @@ Gupload/
 
 ## Additional Documentation
 
-- See `data/docs/USAGE.md` for detailed usage guide
-- See `data/docs/STRUCTURE.md` for repository structure documentation
-- See `CLAUDE.md` for development documentation
+- 📖 **[ADVANCED_FEATURES.md](ADVANCED_FEATURES.md)** - Complete guide to all advanced features (batch upload, templates, search, export, etc.)
+- 📋 **[QUICK_REFERENCE.md](QUICK_REFERENCE.md)** - Fast reference for common tasks and workflows
+- 📝 **[MENU_IMPROVEMENTS.md](MENU_IMPROVEMENTS.md)** - Detailed changelog of menu system improvements
+- 📚 **`data/docs/USAGE.md`** - Detailed usage guide
+- 🏗️ **`data/docs/STRUCTURE.md`** - Repository structure documentation
+- 🔧 **`CLAUDE.md`** - Development documentation
 
 </details>
 
