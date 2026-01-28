@@ -41,12 +41,12 @@ extract_domain() {
 
 DOMAIN=$(extract_domain "$URL")
 
-# Replace placeholders with JS template
+# Replace placeholders with JS template - FIX: use single quotes to avoid escaping
 CLEAN_URL="$URL"
 CLEAN_URL="${CLEAN_URL//%Search%/'+encodeURIComponent(q)+'}"
 CLEAN_URL="${CLEAN_URL//%s/'+encodeURIComponent(q)+'}"
 
-# Build bookmarklet
+# Build bookmarklet - use single quotes around the URL to prevent shell expansion
 BOOKMARKLET="javascript:(function(){var q=prompt('Search ${DOMAIN}:');if(q)window.location.href='${CLEAN_URL}';})();"
 
 # Copy to clipboard (macOS)
